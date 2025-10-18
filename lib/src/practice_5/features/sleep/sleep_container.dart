@@ -92,7 +92,15 @@ class _SleepContainerState extends State<SleepContainer> {
   }
 
   void _openStats() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => StatsScreen(sessions: _sessions, settings: _settings)));
+    Navigator.of(context).push(
+        MaterialPageRoute(
+            builder: (_) => StatsScreen(
+              sessions: _sessions,
+              settings: _settings,
+              onClose: () => Navigator.of(context).pop(),
+            )
+        )
+    );
   }
 
   void _openSettings() {
