@@ -27,8 +27,7 @@ class _SleepContainerState extends State<SleepContainer> {
 
   List<SleepSession> get _today => _sessions.where((s) =>
   s.start.year == _currentDate.year &&
-      s.start.month == _currentDate.month &&
-      s.start.day == _currentDate.day).toList().reversed.toList();
+      s.start.month == _currentDate.month).toList().reversed.toList();
 
   void _startSleep() {
     final id = _uuid.v4();

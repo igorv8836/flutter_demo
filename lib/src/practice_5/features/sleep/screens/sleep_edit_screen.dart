@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../shared/utils/format.dart';
 import '../model/sleep_session.dart';
 
@@ -41,23 +42,56 @@ class _SleepEditScreenState extends State<SleepEditScreen> {
     widget.onSave(widget.session.copyWith(start: _start, end: _end, quality: _quality, note: _note.text));
     Navigator.of(context).pop();
   }
+
+  String _qualityUrl(SleepQuality? q) {
+    switch (q) {
+      case SleepQuality.great:
+      case SleepQuality.good:
+        return 'https://i.postimg.cc/j2XQD0M8/i.webp';
+      case SleepQuality.fair:
+        return 'https://i.postimg.cc/K8cprQLK/600011875033b0.jpg';
+      case SleepQuality.poor:
+        return 'https://i.postimg.cc/Y9zPkVB3/fog-trees-bw-157820-3840x2400.jpg';
+      default:
+        return 'https://i.postimg.cc/K8cprQLK/600011875033b0.jpg';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Редактирование'), actions: [IconButton(onPressed: _save, icon: const Icon(Icons.check))]),
+      appBar: AppBar(
+          title: const Text('Редактирование'),
+          elevation: 0,
+          actions: [IconButton(onPressed: _save, icon: const Icon(Icons.check))]
+      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
         children: [
-          ListTile(title: const Text('Начало'), subtitle: Text('${fmtDate(_start)} • ${fmtTime(_start)}'), onTap: () => _pickDateTime(true)),
-          ListTile(title: const Text('Окончание'), subtitle: Text(_end == null ? '—' : '${fmtDate(_end!)} • ${fmtTime(_end!)}'), onTap: () => _pickDateTime(false)),
-          DropdownButtonFormField<SleepQuality>(
-            value: _quality,
-            items: SleepQuality.values.map((q) => DropdownMenuItem(value: q, child: Text(q.name))).toList(),
-            onChanged: (v) => setState(() => _quality = v),
-            decoration: const InputDecoration(labelText: 'Качество'),
+          CachedNetworkImage(
+            imageUrl: _qualityUrl(_quality),
+            height: 160,
+            fit: BoxFit.cover,
+            placeholder: (c, _) => const SizedBox(height: 160, child: Center(child: CircularProgressIndicator())),
+            errorWidget: (c, _, __) => const SizedBox(height: 160, child: Center(child: Icon(Icons.broken_image))),
           ),
-          const SizedBox(height: 12),
-          TextFormField(controller: _note, decoration: const InputDecoration(labelText: 'Заметка')),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                ListTile(title: const Text('Начало'), subtitle: Text('${fmtDate(_start)} • ${fmtTime(_start)}'), onTap: () => _pickDateTime(true)),
+                ListTile(title: const Text('Окончание'), subtitle: Text(_end == null ? '—' : '${fmtDate(_end!)} • ${fmtTime(_end!)}'), onTap: () => _pickDateTime(false)),
+                DropdownButtonFormField<SleepQuality>(
+                  value: _quality,
+                  items: SleepQuality.values.map((q) => DropdownMenuItem(value: q, child: Text(q.name))).toList(),
+                  onChanged: (v) => setState(() => _quality = v),
+                  decoration: const InputDecoration(labelText: 'Качество'),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(controller: _note, decoration: const InputDecoration(labelText: 'Заметка')),
+              ]
+            ),
+          ),
         ],
       ),
     );
