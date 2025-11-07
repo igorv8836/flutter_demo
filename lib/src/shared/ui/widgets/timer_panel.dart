@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../shared/utils/format.dart';
+import '../../utils/format.dart';
 
 class TimerPanel extends StatelessWidget {
   final Duration elapsed;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:practice_2/src/practice_4/examples/simple_column_screen.dart';
+import 'simple_column_screen.dart';
 import 'builder_list_screen.dart';
 import 'column_list_screen.dart';
 import 'separated_list_screen.dart';

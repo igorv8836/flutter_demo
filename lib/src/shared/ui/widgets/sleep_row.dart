@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../features/sleep/model/sleep_session.dart';
-import '../../../shared/utils/format.dart';
+import '../../utils/format.dart';
 
 class SleepRow extends StatelessWidget {
   final SleepSession session;

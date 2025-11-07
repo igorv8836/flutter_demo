@@ -8,8 +8,6 @@ class SleepListScreen extends StatelessWidget {
   final VoidCallback onStart;
   final void Function(SleepSession) onOpen;
   final void Function(SleepSession) onDelete;
-  final VoidCallback onOpenStats;
-  final VoidCallback onOpenSettings;
   final DateTime date;
   const SleepListScreen({
     super.key,
@@ -17,8 +15,6 @@ class SleepListScreen extends StatelessWidget {
     required this.onStart,
     required this.onOpen,
     required this.onDelete,
-    required this.onOpenStats,
-    required this.onOpenSettings,
     required this.date,
   });
   @override
@@ -26,10 +22,6 @@ class SleepListScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Сон • ${fmtDate(date)}'),
-        actions: [
-          IconButton(onPressed: onOpenStats, icon: const Icon(Icons.insights)),
-          IconButton(onPressed: onOpenSettings, icon: const Icon(Icons.settings)),
-        ],
       ),
       body: ListView.builder(
         itemCount: sessions.length,
