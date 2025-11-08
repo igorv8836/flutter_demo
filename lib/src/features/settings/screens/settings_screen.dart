@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import '../model/settings.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -29,7 +30,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
   void _save() {
     widget.onSave(widget.initial.copyWith(targetDuration: _target, targetBedtime: _bedtime));
-    Navigator.of(context).pop();
+    context.pop();
   }
   @override
   Widget build(BuildContext context) {

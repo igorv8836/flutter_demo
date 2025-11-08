@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:practice_2/src/features/sleep/sleep_container.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app_model.dart';
 
@@ -34,9 +34,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
         SnackBar(content: Text(ok ? 'Вход выполнен' : 'Неверный пароль')),
       );
       if (ok) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => SleepContainer(model: AppModel())),
-        );
+        context.pushReplacement("/sleep", extra: AppModel());
       }
     }
     setState(() => _loading = false);

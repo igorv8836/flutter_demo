@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import '../../../shared/utils/format.dart';
 import '../model/sleep_session.dart';
 
@@ -40,7 +41,7 @@ class _SleepEditScreenState extends State<SleepEditScreen> {
       return;
     }
     widget.onSave(widget.session.copyWith(start: _start, end: _end, quality: _quality, note: _note.text));
-    Navigator.of(context).pop();
+    context.pop();
   }
 
   String _qualityUrl(SleepQuality? q) {
