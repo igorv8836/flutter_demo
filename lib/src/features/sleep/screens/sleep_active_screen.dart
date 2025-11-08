@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:practice_2/src/features/sleep/model/sleep_session.dart';
 import '../../../shared/ui/widgets/timer_panel.dart';
 import '../model/awakening.dart';
 
 class SleepActiveScreen extends StatefulWidget {
-  final DateTime startedAt;
-  final List<Awakening> awakenings;
+  final SleepSession session;
   final VoidCallback onAwakening;
   final VoidCallback onFinish;
-  const SleepActiveScreen({super.key, required this.startedAt, required this.awakenings, required this.onAwakening, required this.onFinish});
+  const SleepActiveScreen({super.key, required this.session, required this.onAwakening, required this.onFinish});
   @override
   State<SleepActiveScreen> createState() => _SleepActiveScreenState();
 }
@@ -20,9 +20,9 @@ class _SleepActiveScreenState extends State<SleepActiveScreen> {
   @override
   void initState() {
     super.initState();
-    _elapsed = DateTime.now().difference(widget.startedAt);
+    _elapsed = DateTime.now().difference(widget.session.start);
     _t = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() => _elapsed = DateTime.now().difference(widget.startedAt));
+      setState(() => _elapsed = DateTime.now().difference(widget.session.start));
     });
   }
   @override
@@ -31,7 +31,7 @@ class _SleepActiveScreenState extends State<SleepActiveScreen> {
     super.dispose();
   }
   bool get _isAwake =>
-      widget.awakenings.isNotEmpty && widget.awakenings.last.end == null;
+      widget.session.awakenings.isNotEmpty && widget.session.awakenings.last.end == null;
 
   @override
   Widget build(BuildContext context) {

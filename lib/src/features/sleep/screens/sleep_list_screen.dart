@@ -8,6 +8,9 @@ class SleepListScreen extends StatelessWidget {
   final VoidCallback onStart;
   final void Function(SleepSession) onOpen;
   final void Function(SleepSession) onDelete;
+  final VoidCallback onOpenStats;
+  final VoidCallback onOpenSettings;
+  final VoidCallback onLock;
   final DateTime date;
   const SleepListScreen({
     super.key,
@@ -15,6 +18,9 @@ class SleepListScreen extends StatelessWidget {
     required this.onStart,
     required this.onOpen,
     required this.onDelete,
+    required this.onOpenStats,
+    required this.onOpenSettings,
+    required this.onLock,
     required this.date,
   });
   @override
@@ -22,6 +28,10 @@ class SleepListScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Сон • ${fmtDate(date)}'),
+        actions: [
+          IconButton(onPressed: () => onOpenStats(), icon: const Icon(Icons.insights)),
+          IconButton(onPressed: () => onOpenSettings(), icon: const Icon(Icons.settings)),
+        ],
       ),
       body: ListView.builder(
         itemCount: sessions.length,
@@ -34,7 +44,23 @@ class SleepListScreen extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(onPressed: onStart, label: const Text('Начать сон'), icon: const Icon(Icons.nights_stay)),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            onPressed: onStart,
+            label: const Text('Начать сон'),
+            icon: const Icon(Icons.nights_stay),
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton.extended(
+            onPressed: onLock,
+            label: const Text('Заблокировать'),
+            icon: const Icon(Icons.lock),
+          ),
+        ],
+      ),
     );
   }
 }

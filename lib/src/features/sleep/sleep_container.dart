@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:practice_2/src/features/password/password_screen.dart';
+import 'package:practice_2/src/features/settings/screens/settings_screen.dart';
+import 'package:practice_2/src/features/sleep/screens/sleep_active_screen.dart';
+import 'package:practice_2/src/features/stats/screens/stats_screen.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../app_model.dart';
+import '../settings/model/settings.dart';
 import 'model/awakening.dart';
 import 'model/sleep_session.dart';
-import 'screens/sleep_active_screen.dart';
+import 'screens/sleep_edit_screen.dart';
 import 'screens/sleep_list_screen.dart';
-
-enum Screen { list, active }
 
 class SleepContainer extends StatefulWidget {
   final AppModel model;
@@ -19,11 +21,11 @@ class SleepContainer extends StatefulWidget {
 
 class _SleepContainerState extends State<SleepContainer> {
   final _uuid = const Uuid();
-  Screen _screen = Screen.list;
   String? _activeId;
   DateTime _currentDate = DateTime.now();
 
   List<SleepSession> get _sessions => widget.model.sessions;
+  Settings get _settings => widget.model.settings;
 
   List<SleepSession> get _today => _sessions.where((s) =>
   s.start.year == _currentDate.year &&
@@ -36,8 +38,15 @@ class _SleepContainerState extends State<SleepContainer> {
     setState(() {
       _sessions.add(s);
       _activeId = id;
-      context.go("/sleep/active");
     });
+
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) =>
+        SleepActiveScreen(
+            session: s,
+            onAwakening: _addAwakening,
+            onFinish: _finishSleep
+        )
+    ));
   }
 
   void _finishSleep() {
@@ -47,9 +56,10 @@ class _SleepContainerState extends State<SleepContainer> {
     final updated = _sessions[i].copyWith(end: ended);
     setState(() {
       _sessions[i] = updated;
-      _screen = Screen.list;
       _activeId = null;
     });
+
+    Navigator.of(context).pop();
   }
 
   void _addAwakening() {
@@ -69,12 +79,13 @@ class _SleepContainerState extends State<SleepContainer> {
   }
 
   void _openEdit(SleepSession s) {
-    final i = _sessions.indexWhere((x) => x.id == s.id);
-    if (i != -1) {
-      widget.model.sessions[i] = s;
-    }
-
-    context.go('/sleep/edit');
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => SleepEditScreen(
+      session: s,
+      onSave: (ns) {
+        final i = _sessions.indexWhere((x) => x.id == ns.id);
+        if (i != -1) setState(() => _sessions[i] = ns);
+      },
+    )));
   }
 
   void _delete(SleepSession s) {
@@ -92,20 +103,27 @@ class _SleepContainerState extends State<SleepContainer> {
 
   @override
   Widget build(BuildContext context) {
-    if (_screen == Screen.active) {
-      final s = _sessions.firstWhere((x) => x.id == _activeId);
-      return SleepActiveScreen(
-        startedAt: s.start,
-        awakenings: s.awakenings,
-        onAwakening: _addAwakening,
-        onFinish: _finishSleep,
-      );
-    }
     return SleepListScreen(
       sessions: _today,
       onStart: _startSleep,
       onOpen: _openEdit,
+      onLock: () => Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) =>
+        PasswordScreen()
+      )),
       onDelete: _delete,
+      onOpenStats: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) =>
+          StatsScreen(
+              sessions: _sessions,
+              settings: _settings,
+              onClose: () => Navigator.of(context).pop(),
+          )
+      )
+      ),
+      onOpenSettings: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) =>
+          SettingsScreen(initial: _settings, onSave: (s) =>
+              widget.model.settings = s
+          )
+      )),
       date: _currentDate,
     );
   }

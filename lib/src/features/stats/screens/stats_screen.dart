@@ -25,6 +25,10 @@ class StatsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Статистика'),
+        leading: IconButton(
+          onPressed: onClose,
+          icon: const Icon(Icons.arrow_back),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
