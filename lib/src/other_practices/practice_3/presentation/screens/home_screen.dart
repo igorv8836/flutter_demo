@@ -15,7 +15,7 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.indigoAccent.withOpacity(.1), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: Colors.indigoAccent.withValues(alpha: .1), borderRadius: BorderRadius.circular(12)),
             child: Text('Всего элементов: ${m.items.length}\nВ избранном: ${m.favorites.length}'),
           ),
           const SizedBox(height: 16),

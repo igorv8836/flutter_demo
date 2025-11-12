@@ -1,46 +1,77 @@
-import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../../shared/di/app_scope.dart';
 import '../../../shared/utils/format.dart';
 import '../model/sleep_session.dart';
 
 class SleepEditScreen extends StatefulWidget {
-  final SleepSession session;
-  final void Function(SleepSession) onSave;
-  const SleepEditScreen({super.key, required this.session, required this.onSave});
+  final String sessionId;
+  const SleepEditScreen({super.key, required this.sessionId});
   @override
   State<SleepEditScreen> createState() => _SleepEditScreenState();
 }
 
 class _SleepEditScreenState extends State<SleepEditScreen> {
-  late DateTime _start;
+  late final TextEditingController _note;
+  DateTime? _start;
   DateTime? _end;
   SleepQuality? _quality;
-  final _note = TextEditingController();
+  SleepSession? _session;
+  bool _initialized = false;
+
+  _SleepEditScreenState() : _note = TextEditingController();
+
   @override
-  void initState() {
-    super.initState();
-    _start = widget.session.start;
-    _end = widget.session.end;
-    _quality = widget.session.quality;
-    _note.text = widget.session.note ?? '';
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final repo = AppScope.of(context).sleepRepository;
+    _session = repo.getById(widget.sessionId);
+    if (!_initialized && _session != null) {
+      _start = _session!.start;
+      _end = _session!.end;
+      _quality = _session!.quality;
+      _note.text = _session!.note ?? '';
+      _initialized = true;
+    }
   }
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
   Future<void> _pickDateTime(bool isStart) async {
-    final d = await showDatePicker(context: context, firstDate: DateTime(2022), lastDate: DateTime(2100), initialDate: isStart ? _start : (_end ?? DateTime.now()));
+    if (_start == null) return;
+    final base = isStart ? _start! : (_end ?? DateTime.now());
+    final d = await showDatePicker(context: context, firstDate: DateTime(2022), lastDate: DateTime(2100), initialDate: base);
+    if (!mounted) return;
     if (d == null) return;
-    final t = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(isStart ? _start : (_end ?? DateTime.now())));
+    final t = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(base));
+    if (!mounted) return;
     if (t == null) return;
     final dt = DateTime(d.year, d.month, d.day, t.hour, t.minute);
     setState(() {
-      if (isStart) _start = dt; else _end = dt;
+      if (isStart) {
+        _start = dt;
+      } else {
+        _end = dt;
+      }
     });
   }
+
   void _save() {
-    if (_end != null && _end!.isBefore(_start)) {
+    final repo = AppScope.of(context).sleepRepository;
+    final session = _session;
+    final start = _start;
+    if (session == null || start == null) return;
+    if (_end != null && _end!.isBefore(start)) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Окончание раньше начала')));
       return;
     }
-    widget.onSave(widget.session.copyWith(start: _start, end: _end, quality: _quality, note: _note.text));
+    repo.saveSession(session.copyWith(start: start, end: _end, quality: _quality, note: _note.text));
     context.pop();
   }
 
@@ -60,11 +91,17 @@ class _SleepEditScreenState extends State<SleepEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_session == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Редактирование')),
+        body: const Center(child: Text('Сессия не найдена')),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
-          title: const Text('Редактирование'),
-          elevation: 0,
-          actions: [IconButton(onPressed: _save, icon: const Icon(Icons.check))]
+        title: const Text('Редактирование'),
+        elevation: 0,
+        actions: [IconButton(onPressed: _save, icon: const Icon(Icons.check))],
       ),
       body: ListView(
         children: [
@@ -80,17 +117,25 @@ class _SleepEditScreenState extends State<SleepEditScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 12),
-                ListTile(title: const Text('Начало'), subtitle: Text('${fmtDate(_start)} • ${fmtTime(_start)}'), onTap: () => _pickDateTime(true)),
+                ListTile(title: const Text('Начало'), subtitle: Text('${fmtDate(_start!)} • ${fmtTime(_start!)}'), onTap: () => _pickDateTime(true)),
                 ListTile(title: const Text('Окончание'), subtitle: Text(_end == null ? '—' : '${fmtDate(_end!)} • ${fmtTime(_end!)}'), onTap: () => _pickDateTime(false)),
-                DropdownButtonFormField<SleepQuality>(
-                  value: _quality,
-                  items: SleepQuality.values.map((q) => DropdownMenuItem(value: q, child: Text(q.name))).toList(),
-                  onChanged: (v) => setState(() => _quality = v),
+                InputDecorator(
                   decoration: const InputDecoration(labelText: 'Качество'),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<SleepQuality>(
+                      value: _quality,
+                      isExpanded: true,
+                      items: SleepQuality.values
+                          .map((q) => DropdownMenuItem(value: q, child: Text(q.name)))
+                          .toList(),
+                      onChanged: (v) => setState(() => _quality = v),
+                      hint: const Text('Не выбрано'),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(controller: _note, decoration: const InputDecoration(labelText: 'Заметка')),
-              ]
+              ],
             ),
           ),
         ],

@@ -1,32 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../../../shared/utils/format.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../shared/di/app_scope.dart';
 import '../../../shared/ui/widgets/metric_card.dart';
-import '../../sleep/model/sleep_session.dart';
-import '../../settings/model/settings.dart';
+import '../../../shared/utils/format.dart';
 import '../stats_service.dart';
 
 class StatsScreen extends StatelessWidget {
-  final List<SleepSession> sessions;
-  final Settings settings;
-  final VoidCallback? onClose;
-
-  const StatsScreen({
-    super.key,
-    required this.sessions,
-    required this.settings,
-    this.onClose,
-  });
+  const StatsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final scope = AppScope.of(context);
+    final sessions = scope.sleepRepository.sessions;
+    final settings = scope.settingsRepository.settings;
     final s7 = StatsService().compute(sessions, settings, days: 7);
     final s30 = StatsService().compute(sessions, settings, days: 30);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Статистика'),
         leading: IconButton(
-          onPressed: onClose,
+          onPressed: () => context.pop(),
           icon: const Icon(Icons.arrow_back),
         ),
       ),
@@ -42,14 +36,12 @@ class StatsScreen extends StatelessWidget {
           MetricCard(
             title: 'Эффективность',
             value: '${(s7.efficiency * 100).round()}%',
-            imageUrl:
-                "https://i.postimg.cc/gjQZQS5G/free-icon-lighting-7016896.png",
+            imageUrl: "https://i.postimg.cc/gjQZQS5G/free-icon-lighting-7016896.png",
           ),
           MetricCard(
             title: 'Регулярность',
             value: '${s7.regularity.inMinutes} мин',
-            imageUrl:
-                "https://i.postimg.cc/GpX96g8T/free-icon-calendar-7691413.png",
+            imageUrl: "https://i.postimg.cc/GpX96g8T/free-icon-calendar-7691413.png",
           ),
           MetricCard(
             title: 'Sleep Score',
@@ -58,8 +50,7 @@ class StatsScreen extends StatelessWidget {
               value: s7.sleepScore / 100,
               minHeight: 8,
             ),
-            imageUrl:
-                "https://i.postimg.cc/7PGN4d1n/free-icon-three-star-17933526.png",
+            imageUrl: "https://i.postimg.cc/7PGN4d1n/free-icon-three-star-17933526.png",
           ),
           const SizedBox(height: 12),
           const Text('30 дней', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -71,14 +62,12 @@ class StatsScreen extends StatelessWidget {
           MetricCard(
             title: 'Эффективность',
             value: '${(s30.efficiency * 100).round()}%',
-            imageUrl:
-            "https://i.postimg.cc/gjQZQS5G/free-icon-lighting-7016896.png",
+            imageUrl: "https://i.postimg.cc/gjQZQS5G/free-icon-lighting-7016896.png",
           ),
           MetricCard(
             title: 'Регулярность',
             value: '${s30.regularity.inMinutes} мин',
-            imageUrl:
-            "https://i.postimg.cc/GpX96g8T/free-icon-calendar-7691413.png",
+            imageUrl: "https://i.postimg.cc/GpX96g8T/free-icon-calendar-7691413.png",
           ),
           MetricCard(
             title: 'Sleep Score',
@@ -87,8 +76,7 @@ class StatsScreen extends StatelessWidget {
               value: s30.sleepScore / 100,
               minHeight: 8,
             ),
-            imageUrl:
-            "https://i.postimg.cc/7PGN4d1n/free-icon-three-star-17933526.png",
+            imageUrl: "https://i.postimg.cc/7PGN4d1n/free-icon-three-star-17933526.png",
           ),
         ],
       ),

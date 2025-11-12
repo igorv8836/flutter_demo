@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app_model.dart';
+import '../../shared/di/app_scope.dart';
 
 class PasswordScreen extends StatefulWidget {
   const PasswordScreen({super.key});
@@ -15,7 +15,6 @@ class _PasswordScreenState extends State<PasswordScreen> {
   final _focus = FocusNode();
   bool _obscure = true;
   bool _loading = false;
-  static const _correctPin = '1234';
 
   @override
   void dispose() {
@@ -24,17 +23,16 @@ class _PasswordScreenState extends State<PasswordScreen> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  void _submit() {
     if (_controller.text.length != 4 || _loading) return;
     setState(() => _loading = true);
-    await Future.delayed(const Duration(milliseconds: 300));
-    final ok = _controller.text == _correctPin;
+    final ok = AppScope.of(context).passwordRepository.verifyPin(_controller.text);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(ok ? 'Вход выполнен' : 'Неверный пароль')),
       );
       if (ok) {
-        context.pushReplacement("/sleep", extra: AppModel());
+        context.pushReplacement("/sleep");
       }
     }
     setState(() => _loading = false);
