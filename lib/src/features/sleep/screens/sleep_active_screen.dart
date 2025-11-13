@@ -4,7 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/di/app_scope.dart';
+import '../../../shared/di/locator.dart';
 import '../../../shared/ui/widgets/timer_panel.dart';
 import '../domain/sleep_repository.dart';
 
@@ -20,15 +20,12 @@ class _SleepActiveScreenState extends State<SleepActiveScreen> {
   Timer? _timer;
   Duration _elapsed = Duration.zero;
 
+  SleepRepository get _repo => getIt<SleepRepository>();
+
   @override
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => _updateElapsed());
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
     _updateElapsed();
   }
 
@@ -37,8 +34,6 @@ class _SleepActiveScreenState extends State<SleepActiveScreen> {
     _timer?.cancel();
     super.dispose();
   }
-
-  SleepRepository get _repo => AppScope.of(context).sleepRepository;
 
   void _updateElapsed() {
     if (!mounted) return;
@@ -49,8 +44,15 @@ class _SleepActiveScreenState extends State<SleepActiveScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final repo = AppScope.of(context).sleepRepository;
-    final session = repo.getById(widget.sessionId);
+    SleepRepository? repo;
+
+    if (getIt.isRegistered<SleepRepository>()) {
+      repo = getIt.get<SleepRepository>();
+    } else {
+      print('Error: SleepRepository not found');
+    }
+
+    final session = repo!.getById(widget.sessionId);
     if (session == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Активная сессия')),
@@ -81,11 +83,12 @@ class _SleepActiveScreenState extends State<SleepActiveScreen> {
           TimerPanel(
             elapsed: _elapsed,
             isAwake: isAwake,
-            onAwake: repo.toggleAwakening,
+            onAwake: () {
+              repo!.toggleAwakening();
+              setState(() {});
+            },
             onFinish: () {
-              setState(() {
-                repo.finishActive();
-              });
+              repo!.finishActive();
               if (mounted) context.pop();
             },
           ),

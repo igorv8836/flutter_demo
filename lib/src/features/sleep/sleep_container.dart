@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../shared/di/app_scope.dart';
+import '../../shared/di/locator.dart';
 import 'domain/sleep_repository.dart';
 import 'model/sleep_session.dart';
 import 'screens/sleep_list_screen.dart';
@@ -15,12 +15,17 @@ class SleepContainer extends StatefulWidget {
 class _SleepContainerState extends State<SleepContainer> {
   final DateTime _currentDate = DateTime.now();
 
-  SleepRepository get _repo => AppScope.of(context).sleepRepository;
+  SleepRepository get _repo => getIt<SleepRepository>();
+
+  void _triggerUpdate() {
+    if (mounted) setState(() {});
+  }
 
   void _startSleep() {
     final repo = _repo;
     final activeId = repo.activeSessionId;
     final session = activeId != null ? repo.getById(activeId) ?? repo.startSession() : repo.startSession();
+    _triggerUpdate();
     context.push('/sleep/active', extra: session.id);
   }
 
@@ -34,12 +39,16 @@ class _SleepContainerState extends State<SleepContainer> {
     if (index == -1) return;
     final removed = repo.deleteSession(session.id);
     if (removed == null) return;
+    _triggerUpdate();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Удалено'),
         action: SnackBarAction(
           label: 'Отменить',
-          onPressed: () => repo.insertSession(removed, index: index),
+          onPressed: () {
+            repo.insertSession(removed, index: index);
+            _triggerUpdate();
+          },
         ),
       ),
     );
@@ -50,8 +59,8 @@ class _SleepContainerState extends State<SleepContainer> {
 
   @override
   Widget build(BuildContext context) {
-    final sleepRepo = AppScope.of(context).sleepRepository;
-    final sessions = sleepRepo.sessionsForDate(_currentDate);
+    final repo = _repo;
+    final sessions = repo.sessionsForDate(_currentDate);
     return SleepListScreen(
       sessions: sessions,
       onStart: _startSleep,

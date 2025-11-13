@@ -2,8 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/di/app_scope.dart';
+import '../../../shared/di/locator.dart';
 import '../../../shared/utils/format.dart';
+import '../domain/sleep_repository.dart';
 import '../model/sleep_session.dart';
 
 class SleepEditScreen extends StatefulWidget {
@@ -24,34 +25,30 @@ class _SleepEditScreenState extends State<SleepEditScreen> {
   _SleepEditScreenState() : _note = TextEditingController();
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final repo = AppScope.of(context).sleepRepository;
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  void _ensureSession(SleepRepository repo) {
+    if (_initialized) return;
     _session = repo.getById(widget.sessionId);
-    if (!_initialized && _session != null) {
+    if (_session != null) {
       _start = _session!.start;
       _end = _session!.end;
       _quality = _session!.quality;
       _note.text = _session!.note ?? '';
-      _initialized = true;
     }
-  }
-
-  @override
-  void dispose() {
-    _note.dispose();
-    super.dispose();
+    _initialized = true;
   }
 
   Future<void> _pickDateTime(bool isStart) async {
     if (_start == null) return;
     final base = isStart ? _start! : (_end ?? DateTime.now());
     final d = await showDatePicker(context: context, firstDate: DateTime(2022), lastDate: DateTime(2100), initialDate: base);
-    if (!mounted) return;
-    if (d == null) return;
+    if (!mounted || d == null) return;
     final t = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(base));
-    if (!mounted) return;
-    if (t == null) return;
+    if (!mounted || t == null) return;
     final dt = DateTime(d.year, d.month, d.day, t.hour, t.minute);
     setState(() {
       if (isStart) {
@@ -63,7 +60,7 @@ class _SleepEditScreenState extends State<SleepEditScreen> {
   }
 
   void _save() {
-    final repo = AppScope.of(context).sleepRepository;
+    final repo = getIt<SleepRepository>();
     final session = _session;
     final start = _start;
     if (session == null || start == null) return;
@@ -91,6 +88,8 @@ class _SleepEditScreenState extends State<SleepEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final repo = getIt<SleepRepository>();
+    _ensureSession(repo);
     if (_session == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Редактирование')),
@@ -125,9 +124,7 @@ class _SleepEditScreenState extends State<SleepEditScreen> {
                     child: DropdownButton<SleepQuality>(
                       value: _quality,
                       isExpanded: true,
-                      items: SleepQuality.values
-                          .map((q) => DropdownMenuItem(value: q, child: Text(q.name)))
-                          .toList(),
+                      items: SleepQuality.values.map((q) => DropdownMenuItem(value: q, child: Text(q.name))).toList(),
                       onChanged: (v) => setState(() => _quality = v),
                       hint: const Text('Не выбрано'),
                     ),

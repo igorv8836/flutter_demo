@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/di/app_scope.dart';
+import '../../../shared/di/locator.dart';
 import '../../../shared/ui/widgets/metric_card.dart';
 import '../../../shared/utils/format.dart';
+import '../../settings/domain/settings_repository.dart';
+import '../../sleep/domain/sleep_repository.dart';
 import '../stats_service.dart';
 
 class StatsScreen extends StatelessWidget {
@@ -11,9 +13,8 @@ class StatsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scope = AppScope.of(context);
-    final sessions = scope.sleepRepository.sessions;
-    final settings = scope.settingsRepository.settings;
+    final sessions = getIt<SleepRepository>().sessions;
+    final settings = getIt<SettingsRepository>().settings;
     final s7 = StatsService().compute(sessions, settings, days: 7);
     final s30 = StatsService().compute(sessions, settings, days: 30);
     return Scaffold(

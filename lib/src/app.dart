@@ -1,29 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:practice_2/src/features/password/password_screen.dart';
-import 'package:practice_2/src/shared/di/app_scope.dart';
 
-import 'features/password/domain/password_repository.dart';
-import 'features/settings/domain/settings_repository.dart';
 import 'features/settings/screens/settings_screen.dart';
-import 'features/sleep/domain/sleep_repository.dart';
 import 'features/sleep/screens/sleep_active_screen.dart';
 import 'features/sleep/screens/sleep_edit_screen.dart';
 import 'features/sleep/sleep_container.dart';
 import 'features/stats/screens/stats_screen.dart';
 
 class SleepApp extends StatefulWidget {
-  final PasswordRepository passwordRepository;
-  final SleepRepository sleepRepository;
-  final SettingsRepository settingsRepository;
-
-  const SleepApp({
-    super.key,
-    required this.passwordRepository,
-    required this.sleepRepository,
-    required this.settingsRepository,
-  });
-
+  const SleepApp({super.key});
   @override
   State<SleepApp> createState() => _SleepAppState();
 }
@@ -76,16 +62,11 @@ class _SleepAppState extends State<SleepApp> {
 
   @override
   Widget build(BuildContext context) {
-    return AppScope(
-      passwordRepository: widget.passwordRepository,
-      sleepRepository: widget.sleepRepository,
-      settingsRepository: widget.settingsRepository,
-      child: MaterialApp.router(
-        title: 'Трекер сна',
-        theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.indigo),
-        darkTheme: ThemeData.dark(useMaterial3: true),
-        routerConfig: _router,
-      ),
+    return MaterialApp.router(
+      title: 'Трекер сна',
+      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.indigo),
+      darkTheme: ThemeData.dark(useMaterial3: true),
+      routerConfig: _router,
     );
   }
 }

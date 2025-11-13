@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/di/app_scope.dart';
+import '../../../shared/di/locator.dart';
 import '../domain/settings_repository.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -17,20 +17,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   SettingsRepository? _repository;
   bool _initialized = false;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final repo = AppScope.of(context).settingsRepository;
-    if (_repository != repo) {
-      _repository = repo;
-      _initialized = false;
-    }
-    if (!_initialized) {
-      final settings = repo.settings;
-      _target ??= settings.targetDuration;
-      _bedtime ??= settings.targetBedtime;
-      _initialized = true;
-    }
+  void _ensureSettings(SettingsRepository repo) {
+    if (_initialized) return;
+    final settings = repo.settings;
+    _target = settings.targetDuration;
+    _bedtime = settings.targetBedtime;
+    _initialized = true;
   }
 
   Future<void> _pickTarget() async {
@@ -58,6 +50,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final repo = getIt<SettingsRepository>();
+    if (_repository != repo) {
+      _repository = repo;
+      _initialized = false;
+    }
+    _ensureSettings(repo);
     if (_target == null || _bedtime == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }

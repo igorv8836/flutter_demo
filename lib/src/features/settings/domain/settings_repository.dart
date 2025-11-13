@@ -3,16 +3,17 @@ import 'package:flutter/foundation.dart';
 import '../data/settings_local_data_source.dart';
 import '../model/settings.dart';
 
-class SettingsRepository {
-  var version = 0;
+class SettingsRepository extends ChangeNotifier {
   final SettingsLocalDataSource _local;
+  Settings _settings;
 
-  SettingsRepository(this._local);
+  SettingsRepository(this._local) : _settings = _local.readSettings();
 
-  Settings get settings => _local.readSettings();
+  Settings get settings => _settings;
 
   void update(Settings settings) {
+    _settings = settings;
     _local.writeSettings(settings);
-    version = version + 1;
+    notifyListeners();
   }
 }

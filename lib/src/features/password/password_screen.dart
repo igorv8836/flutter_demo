@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../shared/di/app_scope.dart';
+import '../../shared/di/locator.dart';
+import 'domain/password_repository.dart';
 
 class PasswordScreen extends StatefulWidget {
   const PasswordScreen({super.key});
@@ -26,7 +27,7 @@ class _PasswordScreenState extends State<PasswordScreen> {
   void _submit() {
     if (_controller.text.length != 4 || _loading) return;
     setState(() => _loading = true);
-    final ok = AppScope.of(context).passwordRepository.verifyPin(_controller.text);
+    final ok = getIt<PasswordRepository>().verifyPin(_controller.text);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(ok ? 'Вход выполнен' : 'Неверный пароль')),

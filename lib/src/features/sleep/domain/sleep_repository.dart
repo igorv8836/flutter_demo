@@ -5,8 +5,7 @@ import '../data/sleep_local_data_source.dart';
 import '../model/awakening.dart';
 import '../model/sleep_session.dart';
 
-class SleepRepository {
-  var version = 0;
+class SleepRepository extends ChangeNotifier {
   final SleepLocalDataSource _local;
   final List<SleepSession> _sessions = [];
   final Uuid _uuid = const Uuid();
@@ -40,7 +39,6 @@ class SleepRepository {
   }
 
   SleepSession startSession() {
-    version++;
     final session = SleepSession(id: _uuid.v4(), start: DateTime.now());
     _sessions.add(session);
     _activeSessionId = session.id;
@@ -110,6 +108,6 @@ class SleepRepository {
 
   void _persist() {
     _local.writeSessions(_sessions);
-    version = version + 1;
+    notifyListeners();
   }
 }

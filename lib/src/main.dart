@@ -1,24 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+import 'package:practice_2/src/features/password/domain/password_repository.dart';
 
 import 'app.dart';
 import 'features/password/data/password_local_data_source.dart';
-import 'features/password/domain/password_repository.dart';
-import 'features/settings/data/settings_local_data_source.dart';
-import 'features/settings/domain/settings_repository.dart';
-import 'features/sleep/data/sleep_local_data_source.dart';
-import 'features/sleep/domain/sleep_repository.dart';
+import 'shared/di/locator.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  final passwordRepository = PasswordRepository(PasswordLocalDataSource());
-  final settingsRepository = SettingsRepository(SettingsLocalDataSource());
-  final sleepRepository = SleepRepository(SleepLocalDataSource());
+  final passwordSource = PasswordLocalDataSource();
+  GetIt.I.registerFactory(() => PasswordRepository(passwordSource), instanceName: 'password_repo');
 
-  runApp(
-      SleepApp(
-        passwordRepository: passwordRepository,
-        sleepRepository: sleepRepository,
-        settingsRepository: settingsRepository,
-      )
-  );
+  WidgetsFlutterBinding.ensureInitialized();
+  setupLocator();
+  runApp(const SleepApp());
 }
