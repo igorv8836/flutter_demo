@@ -1,66 +1,41 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/di/locator.dart';
-import '../domain/settings_repository.dart';
+import '../application/settings_form.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
-  @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  Duration? _target;
-  TimeOfDay? _bedtime;
-  SettingsRepository? _repository;
-  bool _initialized = false;
-
-  void _ensureSettings(SettingsRepository repo) {
-    if (_initialized) return;
-    final settings = repo.settings;
-    _target = settings.targetDuration;
-    _bedtime = settings.targetBedtime;
-    _initialized = true;
-  }
-
-  Future<void> _pickTarget() async {
-    if (_target == null) return;
-    final h = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay(hour: _target!.inHours, minute: _target!.inMinutes.remainder(60)),
-    );
-    if (h != null) setState(() => _target = Duration(hours: h.hour, minutes: h.minute));
-  }
-
-  Future<void> _pickBedtime() async {
-    final bedtime = _bedtime;
-    if (bedtime == null) return;
-    final t = await showTimePicker(context: context, initialTime: bedtime);
-    if (t != null) setState(() => _bedtime = t);
-  }
-
-  void _save() {
-    final repo = _repository;
-    if (repo == null || _target == null || _bedtime == null) return;
-    repo.update(repo.settings.copyWith(targetDuration: _target, targetBedtime: _bedtime));
-    if (mounted) context.pop();
-  }
 
   @override
-  Widget build(BuildContext context) {
-    final repo = getIt<SettingsRepository>();
-    if (_repository != repo) {
-      _repository = repo;
-      _initialized = false;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final form = ref.watch(settingsFormProvider);
+    final notifier = ref.read(settingsFormProvider.notifier);
+
+    Future<void> pickTarget() async {
+      final duration = form.targetDuration;
+      final time = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay(hour: duration.inHours, minute: duration.inMinutes.remainder(60)),
+      );
+      if (time != null) {
+        notifier.updateTarget(Duration(hours: time.hour, minutes: time.minute));
+      }
     }
-    _ensureSettings(repo);
-    if (_target == null || _bedtime == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+
+    Future<void> pickBedtime() async {
+      final time = await showTimePicker(context: context, initialTime: form.targetBedtime);
+      if (time != null) notifier.updateBedtime(time);
     }
+
+    void save() {
+      notifier.save();
+      context.pop();
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Настройки'), actions: [IconButton(onPressed: _save, icon: const Icon(Icons.check))]),
+      appBar: AppBar(title: const Text('Настройки'), actions: [IconButton(onPressed: save, icon: const Icon(Icons.check))]),
       body: ListView(
         children: [
           CachedNetworkImage(
@@ -70,8 +45,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             placeholder: (c, _) => const SizedBox(height: 180, child: Center(child: CircularProgressIndicator())),
             errorWidget: (c, _, __) => const SizedBox(height: 180, child: Center(child: Icon(Icons.broken_image))),
           ),
-          ListTile(title: const Text('Целевая длительность'), subtitle: Text('${_target!.inHours} ч ${_target!.inMinutes.remainder(60)} мин'), onTap: _pickTarget),
-          ListTile(title: const Text('Желаемое время отбоя'), subtitle: Text('${_bedtime!.hour.toString().padLeft(2, '0')}:${_bedtime!.minute.toString().padLeft(2, '0')}'), onTap: _pickBedtime),
+          ListTile(
+            title: const Text('Целевая длительность'),
+            subtitle: Text('${form.targetDuration.inHours} ч ${form.targetDuration.inMinutes.remainder(60)} мин'),
+            onTap: pickTarget,
+          ),
+          ListTile(
+            title: const Text('Желаемое время отбоя'),
+            subtitle: Text(
+              '${form.targetBedtime.hour.toString().padLeft(2, '0')}:${form.targetBedtime.minute.toString().padLeft(2, '0')}',
+            ),
+            onTap: pickBedtime,
+          ),
         ],
       ),
     );
