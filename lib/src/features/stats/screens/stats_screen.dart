@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/di/locator.dart';
 import '../../../shared/ui/widgets/metric_card.dart';
 import '../../../shared/utils/format.dart';
-import '../../settings/domain/settings_repository.dart';
-import '../../sleep/domain/sleep_repository.dart';
+import '../../settings/domain/settings_controller.dart';
+import '../../sleep/domain/sleep_controller.dart';
 import '../stats_service.dart';
 
-class StatsScreen extends StatelessWidget {
+class StatsScreen extends ConsumerWidget {
   const StatsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final sessions = getIt<SleepRepository>().sessions;
-    final settings = getIt<SettingsRepository>().settings;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sessions = ref.watch(sleepControllerProvider).sessions;
+    final settings = ref.watch(settingsControllerProvider);
     final s7 = StatsService().compute(sessions, settings, days: 7);
     final s30 = StatsService().compute(sessions, settings, days: 30);
     return Scaffold(
