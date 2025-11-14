@@ -1,75 +1,145 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/di/locator.dart';
 import '../../../shared/utils/format.dart';
-import '../domain/sleep_repository.dart';
+import '../application/sleep_edit_form.dart';
 import '../model/sleep_session.dart';
 
-class SleepEditScreen extends StatefulWidget {
+class SleepEditScreen extends ConsumerWidget {
   final String sessionId;
   const SleepEditScreen({super.key, required this.sessionId});
-  @override
-  State<SleepEditScreen> createState() => _SleepEditScreenState();
-}
-
-class _SleepEditScreenState extends State<SleepEditScreen> {
-  late final TextEditingController _note;
-  DateTime? _start;
-  DateTime? _end;
-  SleepQuality? _quality;
-  SleepSession? _session;
-  bool _initialized = false;
-
-  _SleepEditScreenState() : _note = TextEditingController();
 
   @override
-  void dispose() {
-    _note.dispose();
-    super.dispose();
-  }
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(sleepEditFormProvider(sessionId));
+    final form = ref.read(sleepEditFormProvider(sessionId).notifier);
+    final noteController = form.noteController;
 
-  void _ensureSession(SleepRepository repo) {
-    if (_initialized) return;
-    _session = repo.getById(widget.sessionId);
-    if (_session != null) {
-      _start = _session!.start;
-      _end = _session!.end;
-      _quality = _session!.quality;
-      _note.text = _session!.note ?? '';
+    if (noteController.text != state.note) {
+      noteController.value = TextEditingValue(
+        text: state.note,
+        selection: TextSelection.collapsed(offset: state.note.length),
+      );
     }
-    _initialized = true;
-  }
 
-  Future<void> _pickDateTime(bool isStart) async {
-    if (_start == null) return;
-    final base = isStart ? _start! : (_end ?? DateTime.now());
-    final d = await showDatePicker(context: context, firstDate: DateTime(2022), lastDate: DateTime(2100), initialDate: base);
-    if (!mounted || d == null) return;
-    final t = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(base));
-    if (!mounted || t == null) return;
-    final dt = DateTime(d.year, d.month, d.day, t.hour, t.minute);
-    setState(() {
+    if (!state.hasSession) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Редактирование')),
+        body: const Center(child: Text('Сессия не найдена')),
+      );
+    }
+
+    Future<void> pickDateTime(bool isStart) async {
+      final base = isStart
+          ? (state.start ?? DateTime.now())
+          : (state.end ?? state.start ?? DateTime.now());
+      final pickedDate = await showDatePicker(
+        context: context,
+        firstDate: DateTime(2022),
+        lastDate: DateTime(2100),
+        initialDate: base,
+      );
+      if (pickedDate == null) return;
+      if (!context.mounted) return;
+      final pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(base),
+      );
+      if (pickedTime == null) return;
+      if (!context.mounted) return;
+      final dt = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      );
       if (isStart) {
-        _start = dt;
+        form.updateStart(dt);
       } else {
-        _end = dt;
+        form.updateEnd(dt);
       }
-    });
-  }
-
-  void _save() {
-    final repo = getIt<SleepRepository>();
-    final session = _session;
-    final start = _start;
-    if (session == null || start == null) return;
-    if (_end != null && _end!.isBefore(start)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Окончание раньше начала')));
-      return;
     }
-    repo.saveSession(session.copyWith(start: start, end: _end, quality: _quality, note: _note.text));
-    context.pop();
+
+    void save() {
+      final error = form.save();
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+        return;
+      }
+      context.pop();
+    }
+
+    final start = state.start;
+    final end = state.end;
+    final quality = state.quality;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Редактирование'),
+        elevation: 0,
+        actions: [IconButton(onPressed: save, icon: const Icon(Icons.check))],
+      ),
+      body: ListView(
+        children: [
+          CachedNetworkImage(
+            imageUrl: _qualityUrl(quality),
+            height: 160,
+            fit: BoxFit.cover,
+            placeholder: (c, _) => const SizedBox(height: 160, child: Center(child: CircularProgressIndicator())),
+            errorWidget: (c, _, __) => const SizedBox(height: 160, child: Center(child: Icon(Icons.broken_image))),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                const SizedBox(height: 12),
+                ListTile(
+                  title: const Text('Начало'),
+                  subtitle: Text(start == null ? '—' : '${fmtDate(start)} • ${fmtTime(start)}'),
+                  onTap: () => pickDateTime(true),
+                ),
+                ListTile(
+                  title: const Text('Окончание'),
+                  subtitle: Text(end == null ? '—' : '${fmtDate(end)} • ${fmtTime(end)}'),
+                  onTap: () => pickDateTime(false),
+                ),
+                InputDecorator(
+                  decoration: const InputDecoration(labelText: 'Качество'),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<SleepQuality>(
+                      value: quality,
+                      isExpanded: true,
+                      items: SleepQuality.values
+                          .map((q) => DropdownMenuItem(value: q, child: Text(q.name)))
+                          .toList(),
+                      onChanged: form.updateQuality,
+                      hint: const Text('Не выбрано'),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: noteController,
+                  onChanged: form.updateNote,
+                  decoration: const InputDecoration(labelText: 'Заметка'),
+                ),
+                if (state.endBeforeStart)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Окончание раньше начала',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   String _qualityUrl(SleepQuality? q) {
@@ -84,59 +154,5 @@ class _SleepEditScreenState extends State<SleepEditScreen> {
       default:
         return 'https://i.postimg.cc/K8cprQLK/600011875033b0.jpg';
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final repo = getIt<SleepRepository>();
-    _ensureSession(repo);
-    if (_session == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Редактирование')),
-        body: const Center(child: Text('Сессия не найдена')),
-      );
-    }
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Редактирование'),
-        elevation: 0,
-        actions: [IconButton(onPressed: _save, icon: const Icon(Icons.check))],
-      ),
-      body: ListView(
-        children: [
-          CachedNetworkImage(
-            imageUrl: _qualityUrl(_quality),
-            height: 160,
-            fit: BoxFit.cover,
-            placeholder: (c, _) => const SizedBox(height: 160, child: Center(child: CircularProgressIndicator())),
-            errorWidget: (c, _, __) => const SizedBox(height: 160, child: Center(child: Icon(Icons.broken_image))),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: [
-                const SizedBox(height: 12),
-                ListTile(title: const Text('Начало'), subtitle: Text('${fmtDate(_start!)} • ${fmtTime(_start!)}'), onTap: () => _pickDateTime(true)),
-                ListTile(title: const Text('Окончание'), subtitle: Text(_end == null ? '—' : '${fmtDate(_end!)} • ${fmtTime(_end!)}'), onTap: () => _pickDateTime(false)),
-                InputDecorator(
-                  decoration: const InputDecoration(labelText: 'Качество'),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<SleepQuality>(
-                      value: _quality,
-                      isExpanded: true,
-                      items: SleepQuality.values.map((q) => DropdownMenuItem(value: q, child: Text(q.name))).toList(),
-                      onChanged: (v) => setState(() => _quality = v),
-                      hint: const Text('Не выбрано'),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(controller: _note, decoration: const InputDecoration(labelText: 'Заметка')),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

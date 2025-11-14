@@ -1,75 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../shared/di/locator.dart';
-import 'domain/sleep_repository.dart';
+import 'application/sleep_providers.dart';
+import 'domain/sleep_controller.dart';
 import 'model/sleep_session.dart';
 import 'screens/sleep_list_screen.dart';
 
-class SleepContainer extends StatefulWidget {
+class SleepContainer extends ConsumerWidget {
   const SleepContainer({super.key});
+
   @override
-  State<SleepContainer> createState() => _SleepContainerState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final date = ref.watch(sleepSelectedDateProvider);
+    final sessions = ref.watch(sleepSessionsProvider);
+    final controller = ref.read(sleepControllerProvider.notifier);
 
-class _SleepContainerState extends State<SleepContainer> {
-  final DateTime _currentDate = DateTime.now();
+    void startSleep() {
+      ref.read(sleepSelectedDateProvider.notifier).set(DateTime.now());
+      final router = GoRouter.of(context);
+      final activeId = controller.activeSessionId;
+      if (activeId != null) controller.finishActive();
+      final session = controller.startSession();
+      router.push('/sleep/active', extra: session.id);
+    }
 
-  SleepRepository get _repo => getIt<SleepRepository>();
+    void openEdit(SleepSession session) {
+      context.push('/sleep/edit', extra: session.id);
+    }
 
-  void _triggerUpdate() {
-    if (mounted) setState(() {});
-  }
-
-  void _startSleep() {
-    final repo = _repo;
-    final activeId = repo.activeSessionId;
-    final session = activeId != null ? repo.getById(activeId) ?? repo.startSession() : repo.startSession();
-    _triggerUpdate();
-    context.push('/sleep/active', extra: session.id);
-  }
-
-  void _openEdit(SleepSession session) {
-    context.push('/sleep/edit', extra: session.id);
-  }
-
-  void _delete(SleepSession session) {
-    final repo = _repo;
-    final index = repo.sessions.indexWhere((s) => s.id == session.id);
-    if (index == -1) return;
-    final removed = repo.deleteSession(session.id);
-    if (removed == null) return;
-    _triggerUpdate();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Удалено'),
-        action: SnackBarAction(
-          label: 'Отменить',
-          onPressed: () {
-            repo.insertSession(removed, index: index);
-            _triggerUpdate();
-          },
+    void deleteSession(SleepSession session) {
+      final state = ref.read(sleepControllerProvider);
+      final index = state.sessions.indexWhere((s) => s.id == session.id);
+      if (index == -1) return;
+      final removed = controller.deleteSession(session.id);
+      if (removed == null) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Удалено'),
+          action: SnackBarAction(
+            label: 'Отменить',
+            onPressed: () => controller.insertSession(removed, index: index),
+          ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
-  void _openStats() => context.push('/stats');
-  void _openSettings() => context.push('/settings');
-
-  @override
-  Widget build(BuildContext context) {
-    final repo = _repo;
-    final sessions = repo.sessionsForDate(_currentDate);
     return SleepListScreen(
       sessions: sessions,
-      onStart: _startSleep,
-      onOpen: _openEdit,
+      onStart: startSleep,
+      onOpen: openEdit,
       onLock: () => context.pushReplacement("/"),
-      onDelete: _delete,
-      onOpenStats: _openStats,
-      onOpenSettings: _openSettings,
-      date: _currentDate,
+      onDelete: deleteSession,
+      onOpenStats: () => context.push('/stats'),
+      onOpenSettings: () => context.push('/settings'),
+      date: date,
     );
   }
 }
