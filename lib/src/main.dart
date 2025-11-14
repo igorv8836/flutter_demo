@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get_it/get_it.dart';
 import 'package:practice_2/src/features/password/domain/password_repository.dart';
 
@@ -12,5 +13,5 @@ void main() {
 
   WidgetsFlutterBinding.ensureInitialized();
   setupLocator();
-  runApp(const SleepApp());
+  runApp(const ProviderScope(child: SleepApp()));
 }
