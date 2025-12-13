@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 final _dfDate = DateFormat('dd.MM.yyyy');
@@ -10,3 +11,5 @@ String fmtHm(Duration d) {
   final m = d.inMinutes.remainder(60);
   return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}';
 }
+
+String fmtTimeOfDay(TimeOfDay t) => '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
