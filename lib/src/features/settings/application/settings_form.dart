@@ -8,19 +8,23 @@ part 'settings_form.g.dart';
 class SettingsFormState {
   final Duration targetDuration;
   final TimeOfDay targetBedtime;
+  final bool useDarkTheme;
 
   const SettingsFormState({
     required this.targetDuration,
     required this.targetBedtime,
+    required this.useDarkTheme,
   });
 
   SettingsFormState copyWith({
     Duration? targetDuration,
     TimeOfDay? targetBedtime,
+    bool? useDarkTheme,
   }) {
     return SettingsFormState(
       targetDuration: targetDuration ?? this.targetDuration,
       targetBedtime: targetBedtime ?? this.targetBedtime,
+      useDarkTheme: useDarkTheme ?? this.useDarkTheme,
     );
   }
 }
@@ -33,6 +37,7 @@ class SettingsForm extends _$SettingsForm {
     return SettingsFormState(
       targetDuration: current.targetDuration,
       targetBedtime: current.targetBedtime,
+      useDarkTheme: current.useDarkTheme,
     );
   }
 
@@ -44,11 +49,20 @@ class SettingsForm extends _$SettingsForm {
     state = state.copyWith(targetBedtime: bedtime);
   }
 
+  void updateUseDarkTheme(bool useDarkTheme) {
+    state = state.copyWith(useDarkTheme: useDarkTheme);
+    // Сохраняем сразу, чтобы тема применилась немедленно
+    final controller = ref.read(settingsControllerProvider.notifier);
+    final current = ref.read(settingsControllerProvider);
+    controller.update(current.copyWith(useDarkTheme: useDarkTheme));
+  }
+
   void save() {
     final controller = ref.read(settingsControllerProvider.notifier);
     final updated = ref.read(settingsControllerProvider).copyWith(
           targetDuration: state.targetDuration,
           targetBedtime: state.targetBedtime,
+          useDarkTheme: state.useDarkTheme,
         );
     controller.update(updated);
   }

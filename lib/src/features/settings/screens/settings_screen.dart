@@ -57,6 +57,12 @@ class SettingsScreen extends ConsumerWidget {
             ),
             onTap: pickBedtime,
           ),
+          SwitchListTile(
+            title: const Text('Тёмная тема'),
+            subtitle: const Text('Переключить оформление приложения'),
+            value: form.useDarkTheme,
+            onChanged: notifier.updateUseDarkTheme,
+          ),
         ],
       ),
     );
