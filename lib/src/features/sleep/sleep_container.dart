@@ -6,15 +6,24 @@ import 'application/sleep_providers.dart';
 import 'domain/sleep_controller.dart';
 import 'model/sleep_session.dart';
 import 'screens/sleep_list_screen.dart';
+import '../auth/domain/auth_controller.dart';
 
 class SleepContainer extends ConsumerWidget {
   const SleepContainer({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authControllerProvider);
     final date = ref.watch(sleepSelectedDateProvider);
     final sessions = ref.watch(sleepSessionsProvider);
     final controller = ref.read(sleepControllerProvider.notifier);
+
+    if (!auth.isAuthenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) context.go('/');
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     void startSleep() {
       ref.read(sleepSelectedDateProvider.notifier).set(DateTime.now());
@@ -50,10 +59,18 @@ class SleepContainer extends ConsumerWidget {
       sessions: sessions,
       onStart: startSleep,
       onOpen: openEdit,
-      onLock: () => context.pushReplacement("/"),
+      onLock: () {
+        ref.read(authControllerProvider.notifier).logout();
+        context.go('/');
+      },
       onDelete: deleteSession,
       onOpenStats: () => context.push('/stats'),
       onOpenSettings: () => context.push('/settings'),
+      onOpenGoals: () => context.push('/goals'),
+      onOpenPlanner: () => context.push('/planner'),
+      onOpenInsights: () => context.push('/insights'),
+      onOpenWellbeing: () => context.push('/wellbeing'),
+      onOpenProfile: () => context.push('/profile'),
       date: date,
     );
   }

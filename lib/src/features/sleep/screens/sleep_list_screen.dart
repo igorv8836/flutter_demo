@@ -9,7 +9,12 @@ class SleepListScreen extends StatelessWidget {
   final void Function(SleepSession) onOpen;
   final void Function(SleepSession) onDelete;
   final VoidCallback onOpenStats;
+  final VoidCallback onOpenGoals;
+  final VoidCallback onOpenPlanner;
+  final VoidCallback onOpenInsights;
   final VoidCallback onOpenSettings;
+  final VoidCallback onOpenWellbeing;
+  final VoidCallback onOpenProfile;
   final VoidCallback onLock;
   final DateTime date;
   const SleepListScreen({
@@ -19,7 +24,12 @@ class SleepListScreen extends StatelessWidget {
     required this.onOpen,
     required this.onDelete,
     required this.onOpenStats,
+    required this.onOpenGoals,
+    required this.onOpenPlanner,
+    required this.onOpenInsights,
     required this.onOpenSettings,
+    required this.onOpenWellbeing,
+    required this.onOpenProfile,
     required this.onLock,
     required this.date,
   });
@@ -29,8 +39,13 @@ class SleepListScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Сон • ${fmtDate(date)}'),
         actions: [
-          IconButton(onPressed: () => onOpenStats(), icon: const Icon(Icons.insights)),
-          IconButton(onPressed: () => onOpenSettings(), icon: const Icon(Icons.settings)),
+          IconButton(onPressed: () => onOpenGoals(), tooltip: 'Цели', icon: const Icon(Icons.flag)),
+          IconButton(onPressed: () => onOpenPlanner(), tooltip: 'Режим', icon: const Icon(Icons.schedule)),
+          IconButton(onPressed: () => onOpenInsights(), tooltip: 'Инсайты', icon: const Icon(Icons.tips_and_updates)),
+          IconButton(onPressed: () => onOpenStats(), tooltip: 'Статистика', icon: const Icon(Icons.insights)),
+          IconButton(onPressed: () => onOpenSettings(), tooltip: 'Настройки', icon: const Icon(Icons.settings)),
+          IconButton(onPressed: () => onOpenWellbeing(), tooltip: 'Стресс и настроение', icon: const Icon(Icons.self_improvement)),
+          IconButton(onPressed: () => onOpenProfile(), tooltip: 'Профиль', icon: const Icon(Icons.person)),
         ],
       ),
       body: ListView.builder(
@@ -57,8 +72,8 @@ class SleepListScreen extends StatelessWidget {
           const SizedBox(height: 12),
           FloatingActionButton.extended(
             onPressed: onLock,
-            label: const Text('Заблокировать'),
-            icon: const Icon(Icons.lock),
+            label: const Text('Выйти'),
+            icon: const Icon(Icons.logout),
             heroTag: 'block',
           ),
         ],
