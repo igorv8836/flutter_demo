@@ -6,7 +6,7 @@ part of 'settings_form.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$settingsFormHash() => r'4c5aaa2edc0f0d3409c68dd51a3b30b6265583cb';
+String _$settingsFormHash() => r'27e02f03646ea6d6ea28ad8ca8e04136cfedbf15';
 
 /// See also [SettingsForm].
 @ProviderFor(SettingsForm)

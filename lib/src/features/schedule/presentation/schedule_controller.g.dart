@@ -7,7 +7,7 @@ part of 'schedule_controller.dart';
 // **************************************************************************
 
 String _$scheduleControllerHash() =>
-    r'5f037b2e794ba7aae74cf92f795ae38eee0ce892';
+    r'1c53c5d1e320c0cfd7975bdd35ddfaea51f32889';
 
 /// See also [ScheduleController].
 @ProviderFor(ScheduleController)
