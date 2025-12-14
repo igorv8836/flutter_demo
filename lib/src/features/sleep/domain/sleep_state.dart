@@ -1,4 +1,4 @@
-import '../model/sleep_session.dart';
+import '../core/model/sleep_session.dart';
 
 class SleepState {
   final List<SleepSession> sessions;

@@ -1,8 +1,10 @@
 import '../domain/profile_data.dart';
+import 'profile_data_source.dart';
 
-class ProfileLocalDataSource {
+class ProfileLocalDataSource implements ProfileDataSource {
   const ProfileLocalDataSource();
 
+  @override
   List<ProfileTileData> focus() => const [
         ProfileTileData(
           title: 'Бережное отношение к себе',
@@ -21,6 +23,7 @@ class ProfileLocalDataSource {
         ),
       ];
 
+  @override
   List<ProfileShortcutData> shortcuts() => const [
         ProfileShortcutData(label: 'Настройки', route: '/settings', icon: 'settings'),
         ProfileShortcutData(label: 'Рекомендации', route: '/insights', icon: 'light'),

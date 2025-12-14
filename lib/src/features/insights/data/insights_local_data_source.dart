@@ -1,6 +1,8 @@
-import '../model/insight.dart';
+import '../core/model/insight.dart';
+import 'insights_data_source.dart';
 
-class InsightsLocalDataSource {
+class InsightsLocalDataSource implements InsightsDataSource {
+  @override
   List<Insight> getInsights(DateTime now) {
     final isEvening = now.hour >= 17;
     final isMorning = now.hour <= 11;

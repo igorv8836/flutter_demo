@@ -1,5 +1,5 @@
-import 'features/settings/model/settings.dart';
-import 'features/sleep/model/sleep_session.dart';
+import 'features/settings/core/model/settings.dart';
+import 'features/sleep/core/model/sleep_session.dart';
 
 class AppModel {
   Settings settings = const Settings();

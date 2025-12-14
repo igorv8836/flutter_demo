@@ -1,5 +1,5 @@
-import '../settings/model/settings.dart';
-import '../sleep/model/sleep_session.dart';
+import '../settings/core/model/settings.dart';
+import '../sleep/core/model/sleep_session.dart';
 
 class Stats {
   final Duration avgDuration;

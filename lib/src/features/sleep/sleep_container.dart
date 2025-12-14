@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'application/sleep_providers.dart';
-import 'domain/sleep_controller.dart';
-import 'model/sleep_session.dart';
-import 'screens/sleep_list_screen.dart';
-import '../auth/domain/auth_controller.dart';
+import 'presentation/sleep_providers.dart';
+import 'presentation/sleep_controller.dart';
+import 'core/model/sleep_session.dart';
+import 'presentation/screens/sleep_list_screen.dart';
+import '../auth/presentation/auth_controller.dart';
 
 class SleepContainer extends ConsumerWidget {
   const SleepContainer({super.key});

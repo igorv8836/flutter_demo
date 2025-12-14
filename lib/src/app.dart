@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'features/auth/screens/login_screen.dart';
-import 'features/auth/screens/register_screen.dart';
-import 'features/goals/screens/goals_screen.dart';
-import 'features/insights/screens/insights_screen.dart';
-import 'features/profile/screens/profile_screen.dart';
-import 'features/schedule/screens/schedule_planner_screen.dart';
-import 'features/settings/domain/settings_controller.dart';
-import 'features/settings/screens/settings_screen.dart';
-import 'features/sleep/screens/sleep_active_screen.dart';
-import 'features/sleep/screens/sleep_edit_screen.dart';
+import 'features/auth/presentation/screens/login_screen.dart';
+import 'features/auth/presentation/screens/register_screen.dart';
+import 'features/goals/presentation/screens/goals_screen.dart';
+import 'features/insights/presentation/screens/insights_screen.dart';
+import 'features/profile/presentation/screens/profile_screen.dart';
+import 'features/schedule/presentation/screens/schedule_planner_screen.dart';
+import 'features/settings/presentation/settings_controller.dart';
+import 'features/settings/presentation/screens/settings_screen.dart';
+import 'features/sleep/presentation/screens/sleep_active_screen.dart';
+import 'features/sleep/presentation/screens/sleep_edit_screen.dart';
 import 'features/sleep/sleep_container.dart';
-import 'features/stats/screens/stats_screen.dart';
-import 'features/wellbeing/screens/stress_mood_screen.dart';
+import 'features/stats/presentation/screens/stats_screen.dart';
+import 'features/wellbeing/presentation/screens/stress_mood_screen.dart';
 
 class SleepApp extends ConsumerStatefulWidget {
   const SleepApp({super.key});
