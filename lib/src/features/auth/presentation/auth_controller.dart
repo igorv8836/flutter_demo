@@ -1,10 +1,14 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart' as frp;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../data/auth_local_data_source.dart';
-import '../data/auth_data_source.dart';
 import '../core/model/auth_user.dart';
+import '../data/auth_data_source.dart';
 
 part 'auth_controller.g.dart';
+
+final authDataSourceProvider = frp.Provider<AuthDataSource>((ref) {
+  throw UnimplementedError('authDataSourceProvider должен быть переопределен в ProviderScope');
+});
 
 class AuthState {
   final AuthUser? user;
@@ -42,7 +46,7 @@ class AuthController extends _$AuthController {
 
   @override
   AuthState build() {
-    _local = AuthLocalDataSource();
+    _local = ref.read(authDataSourceProvider);
     final current = _local.readCurrent();
     return AuthState(
       user: current,
