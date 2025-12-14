@@ -5,6 +5,7 @@ import '../core/model/sleep_session.dart';
 import '../data/sleep_repository_impl.dart';
 import '../domain/sleep_state.dart';
 import '../domain/sleep_repository.dart';
+import '../domain/usecases/load_sessions_use_case.dart';
 import '../domain/usecases/finish_active_session_use_case.dart';
 import '../domain/usecases/start_sleep_session_use_case.dart';
 
@@ -13,19 +14,21 @@ part 'sleep_controller.g.dart';
 @Riverpod(keepAlive: true)
 class SleepController extends _$SleepController {
   late final SleepRepository _repository;
+  late final LoadSessionsUseCase _loadSessions;
   late final StartSleepSessionUseCase _startSleep;
   late final FinishActiveSessionUseCase _finishActive;
 
   @override
   SleepState build() {
     _repository = ref.read(sleepRepositoryProvider);
+    _loadSessions = LoadSessionsUseCase(repository: _repository);
     _startSleep = StartSleepSessionUseCase();
     _finishActive = FinishActiveSessionUseCase();
     return _initialState();
   }
 
   SleepState _initialState() {
-    final stored = _repository.readSessions();
+    final stored = _loadSessions.execute();
     final sessions = List<SleepSession>.from(stored);
     String? activeId;
     for (final session in sessions) {
