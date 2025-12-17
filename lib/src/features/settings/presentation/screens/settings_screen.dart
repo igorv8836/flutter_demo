@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../settings_form.dart';
+import '../../../weather/presentation/weather_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -29,6 +30,32 @@ class SettingsScreen extends ConsumerWidget {
       if (time != null) notifier.updateBedtime(time);
     }
 
+    Future<void> pickCity() async {
+      final cityController = TextEditingController(text: form.city);
+      final result = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Город'),
+          content: TextField(
+            controller: cityController,
+            decoration: const InputDecoration(hintText: 'Например, Москва'),
+            textCapitalization: TextCapitalization.sentences,
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Отмена')),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(cityController.text.trim()),
+              child: const Text('Сохранить'),
+            ),
+          ],
+        ),
+      );
+      if (result != null && result.isNotEmpty) {
+        notifier.updateCity(result);
+        await ref.read(weatherControllerProvider.notifier).setCity(result);
+      }
+    }
+
     void save() {
       notifier.save();
       context.pop();
@@ -44,6 +71,12 @@ class SettingsScreen extends ConsumerWidget {
             fit: BoxFit.cover,
             placeholder: (c, _) => const SizedBox(height: 180, child: Center(child: CircularProgressIndicator())),
             errorWidget: (c, _, __) => const SizedBox(height: 180, child: Center(child: Icon(Icons.broken_image))),
+          ),
+          ListTile(
+            title: const Text('Город'),
+            subtitle: Text(form.city.isEmpty ? 'Не указан' : form.city),
+            trailing: const Icon(Icons.location_city),
+            onTap: pickCity,
           ),
           ListTile(
             title: const Text('Целевая длительность'),
@@ -62,6 +95,12 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: const Text('Переключить оформление приложения'),
             value: form.useDarkTheme,
             onChanged: notifier.updateUseDarkTheme,
+          ),
+          SwitchListTile(
+            title: const Text('Цитаты на английском'),
+            subtitle: const Text('Для блоков «Профиль» и «Инсайты»'),
+            value: form.useEnglishQuotes,
+            onChanged: notifier.updateUseEnglishQuotes,
           ),
         ],
       ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../auth/presentation/auth_controller.dart';
 import '../../domain/profile_provider.dart';
+import '../../../quotes/presentation/quotes_controller.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -11,6 +12,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileProvider);
+    final quotes = ref.watch(quotesControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -31,6 +33,14 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
           ),
+          if (quotes.focusQuote != null)
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.format_quote),
+                title: Text(quotes.focusQuote!.content),
+                subtitle: Text(quotes.focusQuote!.author),
+              ),
+            ),
           const SizedBox(height: 12),
           const Text('Фокус сегодня', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),

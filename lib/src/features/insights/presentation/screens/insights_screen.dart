@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../insights_provider.dart';
 import '../../core/model/insight.dart';
+import '../../../weather/presentation/weather_controller.dart';
+import '../../../quotes/presentation/quotes_controller.dart';
+import '../../../../shared/utils/format.dart';
 
 class InsightsScreen extends ConsumerWidget {
   const InsightsScreen({super.key});
@@ -33,6 +36,8 @@ class InsightsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final insights = ref.watch(insightsProvider);
+    final weather = ref.watch(weatherControllerProvider);
+    final quotes = ref.watch(quotesControllerProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Инсайты и рекомендации'),
@@ -41,6 +46,31 @@ class InsightsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          _WeatherCard(state: weather, onRefresh: () => ref.read(weatherControllerProvider.notifier).refresh()),
+          const SizedBox(height: 12),
+          const Text('Цитаты', style: TextStyle(fontWeight: FontWeight.bold)),
+          if (quotes.sleepQuotes.isEmpty && quotes.isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+          ...quotes.sleepQuotes.take(2).map((q) => Card(
+                child: ListTile(
+                  title: Text(q.content),
+                  subtitle: Text(q.author),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text(q.author),
+                        content: Text(q.content),
+                        actions: [TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Закрыть'))],
+                      ),
+                    );
+                  },
+                ),
+              )),
+          const SizedBox(height: 12),
           ...insights.map(
             (i) => Card(
               child: Padding(
@@ -103,5 +133,70 @@ class InsightsScreen extends ConsumerWidget {
       case InsightSeverity.info:
         return 'Совет';
     }
+  }
+}
+
+class _WeatherCard extends StatelessWidget {
+  final WeatherState state;
+  final VoidCallback onRefresh;
+  const _WeatherCard({required this.state, required this.onRefresh});
+
+  @override
+  Widget build(BuildContext context) {
+    final points = state.hourly?.points.take(3).toList() ?? const [];
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.cloud),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    state.location?.city ?? 'Укажите город в настройках',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                IconButton(onPressed: onRefresh, icon: const Icon(Icons.refresh)),
+              ],
+            ),
+            if (state.isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: LinearProgressIndicator(minHeight: 4),
+              ),
+            if (state.error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(state.error!, style: const TextStyle(color: Colors.red)),
+              ),
+            if (points.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  children: points
+                      .map(
+                        (p) => Chip(
+                          label: Text('${fmtTime(p.time)}  ${p.temperature.toStringAsFixed(1)}° • ${p.precipitation.toStringAsFixed(1)} мм'),
+                          avatar: Icon(p.cloudCover > 70 ? Icons.cloud : Icons.wb_sunny, size: 18),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            if (points.isEmpty && !state.isLoading)
+              const Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: Text('Нет прогноза — обновите или задайте город'),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }
