@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../shared/utils/format.dart';
 import '../schedule_controller.dart';
 import '../../core/model/sleep_schedule.dart';
+import '../../../weather/presentation/weather_controller.dart';
 
 class SchedulePlannerScreen extends ConsumerWidget {
   const SchedulePlannerScreen({super.key});
@@ -13,6 +14,7 @@ class SchedulePlannerScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(scheduleControllerProvider);
     final notifier = ref.read(scheduleControllerProvider.notifier);
+    final weather = ref.watch(weatherControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -29,6 +31,32 @@ class SchedulePlannerScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          if (weather.sunCycle != null)
+            Card(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.wb_twilight, size: 28),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Восход: ${fmtTime(weather.sunCycle!.sunrise)}'),
+                          Text('Закат: ${fmtTime(weather.sunCycle!.sunset)}'),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      'Совет: ложитесь за 1-2 ч до заката для плавного засыпания',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           Card(
             color: Theme.of(context).colorScheme.primaryContainer,
             child: Padding(

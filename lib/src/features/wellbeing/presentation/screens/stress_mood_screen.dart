@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../wellbeing_controller.dart';
 import '../../domain/wellbeing_state.dart';
+import '../../../weather/presentation/weather_controller.dart';
 
 class StressMoodScreen extends ConsumerStatefulWidget {
   const StressMoodScreen({super.key});
@@ -29,6 +30,7 @@ class _StressMoodScreenState extends ConsumerState<StressMoodScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(wellbeingControllerProvider);
     final controller = ref.read(wellbeingControllerProvider.notifier);
+    final weather = ref.watch(weatherControllerProvider);
     final remaining = _remainingFor(state);
     _ensureTickTimer(state, remaining);
 
@@ -84,6 +86,19 @@ class _StressMoodScreenState extends ConsumerState<StressMoodScreen> {
               ),
             ),
           ),
+          if (weather.airQuality != null)
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.air),
+                title: Text(
+                  'Качество воздуха: ${weather.airQuality!.usAqi?.toString() ?? 'нет данных'}',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(
+                  'PM2.5: ${weather.airQuality!.pm25.toStringAsFixed(1)}, PM10: ${weather.airQuality!.pm10.toStringAsFixed(1)} • ${weather.airQuality!.advice}',
+                ),
+              ),
+            ),
           if (state.activeAction != null && remaining != null)
             Card(
               child: ListTile(
